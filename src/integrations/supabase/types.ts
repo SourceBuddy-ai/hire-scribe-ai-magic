@@ -14,7 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interview_summaries: {
+        Row: {
+          ai_model_used: string | null
+          created_at: string
+          id: string
+          interview_id: string
+          processing_time_seconds: number | null
+          summary_content: Json | null
+          template_id: string | null
+          transcript_text: string | null
+        }
+        Insert: {
+          ai_model_used?: string | null
+          created_at?: string
+          id?: string
+          interview_id: string
+          processing_time_seconds?: number | null
+          summary_content?: Json | null
+          template_id?: string | null
+          transcript_text?: string | null
+        }
+        Update: {
+          ai_model_used?: string | null
+          created_at?: string
+          id?: string
+          interview_id?: string
+          processing_time_seconds?: number | null
+          summary_content?: Json | null
+          template_id?: string | null
+          transcript_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_summaries_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_summaries_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "summary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interviews: {
+        Row: {
+          candidate_name: string | null
+          consent_obtained: boolean | null
+          created_at: string
+          duration_seconds: number | null
+          file_name: string
+          file_size: number | null
+          file_url: string | null
+          id: string
+          interview_date: string | null
+          position_title: string | null
+          retention_until: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          candidate_name?: string | null
+          consent_obtained?: boolean | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          interview_date?: string | null
+          position_title?: string | null
+          retention_until?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          candidate_name?: string | null
+          consent_obtained?: boolean | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name?: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          interview_date?: string | null
+          position_title?: string | null
+          retention_until?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      summary_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          template_content: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          template_content?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          template_content?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          subscription_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          subscription_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          subscription_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
