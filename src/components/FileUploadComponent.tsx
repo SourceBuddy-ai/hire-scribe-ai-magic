@@ -109,11 +109,18 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     setUploadProgress(0);
 
     try {
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not authenticated');
+      // Get current session first to ensure proper authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Current session:', session);
+      console.log('Session error:', sessionError);
+      
+      if (sessionError || !session?.user) {
+        throw new Error('No active session. Please sign in again.');
       }
+
+      const user = session.user;
+      console.log('Authenticated user:', user.id);
 
       // Create interview record first
       const { data: interview, error: interviewError } = await supabase
@@ -128,6 +135,8 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
         })
         .select()
         .single();
+
+      console.log('Interview insert result:', { interview, interviewError });
 
       if (interviewError || !interview) {
         throw new Error('Failed to create interview record');
