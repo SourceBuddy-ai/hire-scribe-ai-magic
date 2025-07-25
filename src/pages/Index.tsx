@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FileUpload } from '@/components/FileUpload';
 import { ProcessingState } from '@/components/ProcessingState';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
 import { ApiKeyInput } from '@/components/ApiKeyInput';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { RotateCcw, Zap } from 'lucide-react';
+import { RotateCcw, Zap, ArrowRight } from 'lucide-react';
 
 interface ProcessingResults {
   jobSummary: string;
@@ -177,6 +178,24 @@ Focus on extracting the most important technical skills, experience requirements
             )}
           </div>
         )}
+
+        {/* CTA Section */}
+        <div className="mt-16 text-center">
+          <div className="bg-gradient-card rounded-lg p-8 border">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              Ready for More Advanced Features?
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Upgrade to RecruiterLab Pro for audio file processing, team collaboration, 
+              custom templates, and enterprise-grade privacy controls.
+            </p>
+            <Link to="/auth">
+              <Button size="lg" className="gap-2">
+                Get Started <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="mt-16 text-center text-sm text-muted-foreground">
