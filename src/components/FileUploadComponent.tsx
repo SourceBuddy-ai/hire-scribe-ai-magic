@@ -23,6 +23,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   const [candidateName, setCandidateName] = useState('');
   const [positionTitle, setPositionTitle] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 

@@ -9,6 +9,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Landing } from "./pages/Landing";
 import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
+import { InterviewDetail } from "./pages/InterviewDetail";
+import { UserProfile } from "./pages/UserProfile";
+import { Analytics } from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +28,21 @@ const App = () => (
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/interview/:id" element={
+            <ProtectedRoute>
+              <InterviewDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <Analytics />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />

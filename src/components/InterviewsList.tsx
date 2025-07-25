@@ -128,11 +128,7 @@ export const InterviewsList = ({ interviews, onUpdate, compact = false }: Interv
   };
 
   const handleView = (interview: Interview) => {
-    // TODO: Navigate to interview detail page
-    toast({
-      title: "View Interview",
-      description: "Interview detail view coming soon!",
-    });
+    window.location.href = `/interview/${interview.id}`;
   };
 
   const handleDownload = async (interview: Interview) => {

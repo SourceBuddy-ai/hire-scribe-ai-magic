@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, Download, Mail, FileText, Star, AlertTriangle, Target } from 'lucide-react';
+import { Copy, Check, Download, Mail, FileText, Star, AlertTriangle, Target, Save } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -46,6 +46,24 @@ export const ResultsDisplay = ({ results, filename }: ResultsDisplayProps) => {
         variant: "destructive",
       });
     }
+  };
+
+  const downloadJSON = () => {
+    const jsonData = JSON.stringify(results, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `interview-analysis-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "JSON downloaded",
+      description: "Analysis data has been exported as JSON.",
+    });
   };
 
   const downloadResults = () => {
@@ -160,10 +178,16 @@ ${results.recapEmail}`;
           <h2 className="text-2xl font-bold text-foreground">Analysis Complete</h2>
           <p className="text-muted-foreground">From transcript: {filename}</p>
         </div>
-        <Button onClick={downloadResults} className="bg-gradient-primary">
-          <Download className="h-4 w-4 mr-2" />
-          Download Report
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={downloadJSON} variant="outline">
+            <Save className="h-4 w-4 mr-2" />
+            Export JSON
+          </Button>
+          <Button onClick={downloadResults} className="bg-gradient-primary">
+            <Download className="h-4 w-4 mr-2" />
+            Download Report
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
