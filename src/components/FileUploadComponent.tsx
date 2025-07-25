@@ -169,13 +169,17 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       
       toast({
         title: 'Upload successful',
-        description: 'Your file has been uploaded and is ready for processing.',
+        description: 'Your file has been uploaded successfully.',
       });
+
+      // Process the uploaded file
+      await processUploadedFile(interview, selectedFile);
 
       // Reset form
       setSelectedFile(null);
       setCandidateName('');
       setPositionTitle('');
+      setSelectedTemplate(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -192,6 +196,100 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     } finally {
       setUploading(false);
       setUploadProgress(0);
+    }
+  };
+
+  const processUploadedFile = async (interview: any, file: File) => {
+    try {
+      if (file.name.endsWith('.txt')) {
+        // For text files, read content and process immediately
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const transcript = e.target?.result as string;
+          
+          try {
+            const { data, error } = await supabase.functions.invoke('process-interview', {
+              body: {
+                interviewId: interview.id,
+                transcript: transcript,
+                templateId: selectedTemplate?.id || null,
+              },
+            });
+
+            if (error) throw error;
+
+            toast({
+              title: "Processing started",
+              description: "Your interview transcript is being analyzed by AI.",
+            });
+          } catch (error: any) {
+            console.error('Processing error:', error);
+            toast({
+              title: "Processing failed",
+              description: error.message || "Failed to start AI analysis.",
+              variant: "destructive",
+            });
+          }
+        };
+        reader.readAsText(file);
+      } else if (file.type.startsWith('audio/') || file.name.endsWith('.m4a')) {
+        // For audio files, convert to base64 and send for transcription
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const arrayBuffer = e.target?.result as ArrayBuffer;
+            const uint8Array = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < uint8Array.byteLength; i++) {
+              binary += String.fromCharCode(uint8Array[i]);
+            }
+            const base64Audio = btoa(binary);
+
+            console.log('Sending audio for transcription, size:', base64Audio.length);
+
+            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              body: {
+                interviewId: interview.id,
+                audioData: base64Audio,
+              },
+            });
+
+            if (error) throw error;
+
+            toast({
+              title: "Audio processing started",
+              description: "Your audio is being transcribed and analyzed by AI.",
+            });
+          } catch (error: any) {
+            console.error('Audio processing error:', error);
+            toast({
+              title: "Processing failed",
+              description: error.message || "Failed to process audio file.",
+              variant: "destructive",
+            });
+            
+            // Update status to failed
+            await supabase
+              .from('interviews')
+              .update({ status: 'failed' })
+              .eq('id', interview.id);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        toast({
+          title: "File type not supported",
+          description: "Please upload a .txt or audio file.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('File processing error:', error);
+      toast({
+        title: "Processing failed",
+        description: error.message || "Failed to process the file.",
+        variant: "destructive",
+      });
     }
   };
 
