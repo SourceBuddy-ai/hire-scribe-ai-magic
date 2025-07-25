@@ -1,4 +1,63 @@
 project_id = "ijsrczmuaerwmlkmnhxz"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "ipv6"
+port = 54323
+
+[studio]
+enabled = true
+port = 54324
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54325
+# Uncomment to expose additional ports for testing user applications that send emails.
+# smtp_port = 54326
+# pop3_port = 54327
+
+[storage]
+enabled = true
+port = 54326
+image_transformation = true
+import_map = "base64-arraybuffer"
+
+[auth]
+enabled = true
+port = 54327
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://ijsrczmuaerwmlkmnhxz.supabase.co/auth/v1/callback"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_email_confirmations = false
+
+[edge_functions]
+enabled = true
+port = 54328
+
 [functions.process-interview]
+verify_jwt = true
+
+[functions.transcribe-audio]
 verify_jwt = true

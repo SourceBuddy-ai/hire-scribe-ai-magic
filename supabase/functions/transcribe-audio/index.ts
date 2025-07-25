@@ -99,7 +99,7 @@ serve(async (req) => {
     
     // Prepare form data for OpenAI
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
+    const blob = new Blob([binaryAudio], { type: 'audio/webm' }); // OpenAI Whisper accepts various formats
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');

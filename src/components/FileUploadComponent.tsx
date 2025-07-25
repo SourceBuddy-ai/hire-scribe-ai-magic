@@ -59,12 +59,20 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
     const maxSize = 100 * 1024 * 1024; // 100MB
     const allowedTypes = [
       'text/plain',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/mp4',
-      'audio/ogg',
-      'audio/webm'
+      'audio/mpeg',          // .mp3
+      'audio/wav',           // .wav
+      'audio/mp4',           // .mp4, .m4a
+      'audio/x-m4a',         // .m4a (alternative MIME type)
+      'audio/aac',           // .aac
+      'audio/ogg',           // .ogg
+      'audio/webm',          // .webm
+      'audio/flac',          // .flac
+      'audio/x-wav'          // .wav (alternative MIME type)
     ];
+
+    // Additional file extension check for .m4a since MIME types can vary
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ['txt', 'mp3', 'wav', 'mp4', 'm4a', 'aac', 'ogg', 'webm', 'flac'];
 
     if (file.size > maxSize) {
       toast({
@@ -75,10 +83,10 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       return;
     }
 
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || '')) {
       toast({
         title: 'Invalid file type',
-        description: 'Please select a text file (.txt) or audio file (.mp3, .wav, .mp4, .ogg, .webm).',
+        description: 'Please select a text file (.txt) or audio file (.mp3, .wav, .m4a, .mp4, .aac, .ogg, .webm, .flac).',
         variant: 'destructive',
       });
       return;
@@ -255,12 +263,12 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
                 Drop your file here, or click to browse
               </p>
               <p className="text-sm text-muted-foreground mb-4">
-                Supports .txt files and audio files (.mp3, .wav, .mp4, .ogg, .webm)
+                Supports .txt files and audio files (.mp3, .wav, .m4a, .mp4, .aac, .ogg, .webm, .flac)
               </p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".txt,.mp3,.wav,.mp4,.ogg,.webm"
+                accept=".txt,.mp3,.wav,.m4a,.mp4,.aac,.ogg,.webm,.flac"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={uploading || isProcessing}
