@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileUploadComponent } from "@/components/FileUploadComponent";
+import { InterviewsList } from "@/components/InterviewsList";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AudioUpload } from '@/components/AudioUpload';
-import { InterviewsList } from '@/components/InterviewsList';
-import { useToast } from '@/hooks/use-toast';
-import { Upload, FileAudio, Users, Clock, LogOut, Settings } from 'lucide-react';
+import { LogOut, Users, Clock, Brain, Upload, FileAudio } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -44,7 +43,7 @@ interface DashboardStats {
 }
 
 export const Dashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalInterviews: 0,
@@ -52,43 +51,16 @@ export const Dashboard = () => {
     recentInterviews: []
   });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const initAuth = async () => {
-      // Set up auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (session?.user) {
-            setUser(session.user);
-            await loadUserProfile(session.user.id);
-            await loadDashboardStats(session.user.id);
-          } else {
-            setUser(null);
-            setUserProfile(null);
-            navigate('/auth');
-          }
-          setLoading(false);
-        }
-      );
-
-      // Check current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await loadUserProfile(session.user.id);
-        await loadDashboardStats(session.user.id);
-      } else {
-        navigate('/auth');
-      }
+    if (user) {
+      loadUserProfile(user.id);
+      loadDashboardStats(user.id);
       setLoading(false);
-
-      return () => subscription.unsubscribe();
-    };
-
-    initAuth();
-  }, [navigate]);
+    }
+  }, [user]);
 
   const loadUserProfile = async (userId: string) => {
     try {
@@ -138,22 +110,80 @@ export const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleFileUpload = async (interviewId: string) => {
+    if (!user) return;
+    
+    setProcessing(true);
     try {
-      await supabase.auth.signOut();
-      navigate('/auth');
-    } catch (error) {
+      // Get the interview data to extract transcript if it's a text file
+      const { data: interview, error: interviewError } = await supabase
+        .from('interviews')
+        .select('*')
+        .eq('id', interviewId)
+        .single();
+
+      if (interviewError || !interview) {
+        throw new Error('Failed to fetch interview data');
+      }
+
+      let transcript = '';
+
+      // If it's a text file, download and read the content
+      if (interview.file_name.endsWith('.txt')) {
+        const fileName = `${interview.id}-${interview.file_name}`;
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('interview-audio')
+          .download(fileName);
+
+        if (downloadError) {
+          throw new Error('Failed to download file');
+        }
+
+        transcript = await fileData.text();
+      } else {
+        // For audio files, we'll need to implement transcription later
+        // For now, show a message that audio transcription is coming soon
+        toast({
+          title: "Audio files uploaded",
+          description: "Audio transcription will be available soon. For now, please use text files.",
+        });
+        await loadDashboardStats(user.id);
+        setProcessing(false);
+        return;
+      }
+
+      // Process the transcript
+      const { data, error } = await supabase.functions.invoke('process-interview', {
+        body: {
+          interviewId: interview.id,
+          transcript: transcript,
+          templateId: null // Default template for now
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to process interview');
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Processing failed');
+      }
+
       toast({
-        title: "Error signing out",
-        description: "Please try again",
+        title: "Analysis complete",
+        description: "Your interview has been successfully analyzed.",
+      });
+
+      await loadDashboardStats(user.id);
+    } catch (error) {
+      console.error('Processing error:', error);
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
         variant: "destructive",
       });
-    }
-  };
-
-  const refreshStats = () => {
-    if (user) {
-      loadDashboardStats(user.id);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -174,12 +204,11 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <FileAudio className="h-6 w-6 text-primary" />
+              <Brain className="h-6 w-6 text-primary" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">RecruiterLab</h1>
@@ -187,11 +216,7 @@ export const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -263,11 +288,14 @@ export const Dashboard = () => {
                   Upload New Interview
                 </CardTitle>
                 <CardDescription>
-                  Upload your audio recording to generate structured interview insights
+                  Upload your interview transcript or audio to generate structured insights
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <AudioUpload onUploadComplete={refreshStats} />
+                <FileUploadComponent 
+                  onUploadComplete={handleFileUpload} 
+                  isProcessing={processing}
+                />
               </CardContent>
             </Card>
           </div>
@@ -283,9 +311,8 @@ export const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <InterviewsList 
-                  interviews={stats.recentInterviews} 
-                  onUpdate={refreshStats}
-                  compact={true}
+                  interviews={stats.recentInterviews}
+                  onUpdate={() => loadDashboardStats(user.id)}
                 />
               </CardContent>
             </Card>

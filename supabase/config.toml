@@ -1,1 +1,4 @@
 project_id = "ijsrczmuaerwmlkmnhxz"
+
+[functions.process-interview]
+verify_jwt = true
