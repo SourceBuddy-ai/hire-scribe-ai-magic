@@ -128,28 +128,27 @@ ${results.recapEmail}`;
       : content;
 
     return (
-      <Card className="bg-gradient-card shadow-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-primary/10 rounded-md">
-                <Icon className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-lg">{title}</span>
+      <Card className="bg-white shadow-card hover:shadow-lg border border-border rounded-2xl mb-6 transition-shadow">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Icon className="h-5 w-5 text-primary" />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => copyToClipboard(textContent, title)}
-              className="h-8 w-8 p-0"
-            >
-              {copiedSections.has(title) ? (
-                <Check className="h-4 w-4 text-green-600" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </CardTitle>
+            <span className="text-lg font-semibold text-foreground">{title}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => copyToClipboard(textContent, title)}
+            className="h-8 w-8 p-0"
+            aria-label={`Copy ${title}`}
+          >
+            {copiedSections.has(title) ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
         </CardHeader>
         <CardContent>
           {Array.isArray(content) ? (

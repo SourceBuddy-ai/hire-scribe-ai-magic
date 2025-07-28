@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
+	darkMode: "class",
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -10,6 +10,9 @@ export default {
 	],
 	prefix: "",
 	theme: {
+		fontFamily: {
+			sans: ["Inter", "system-ui", "sans-serif"],
+		},
 		container: {
 			center: true,
 			padding: '2rem',

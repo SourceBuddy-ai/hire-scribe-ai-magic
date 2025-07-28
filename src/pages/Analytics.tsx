@@ -240,295 +240,55 @@ ${analytics.recentActivity.map(item => `${new Date(item.date).toLocaleDateString
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-card">
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
-                <p className="text-muted-foreground">Insights and trends from your interview data</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">Last 7 days</SelectItem>
-                  <SelectItem value="30">Last 30 days</SelectItem>
-                  <SelectItem value="90">Last 90 days</SelectItem>
-                  <SelectItem value="365">Last year</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={exportAnalytics} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export Report
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted font-sans py-12 px-4 flex items-center justify-center">
+      <div className="w-full max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-card border border-border">
+        <div className="flex items-center gap-3 mb-8">
+          <BarChart3 className="h-7 w-7 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Analytics</h2>
         </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <FileText className="h-4 w-4" />
-                Total Interviews
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+          <Card className="shadow-card border border-border bg-white">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Total Candidates
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {analytics?.totalInterviews || 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Last {timeRange} days
-              </p>
+              <div className="text-3xl font-bold text-foreground mb-1">{analytics ? analytics.totalCandidates : 0}</div>
+              <p className="text-xs text-muted-foreground">Candidates processed</p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <TrendingUp className="h-4 w-4" />
-                Completed
+          <Card className="shadow-card border border-border bg-white">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Clock className="h-5 w-5 text-yellow-500" />
+                Avg. Processing Time
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {analytics?.completedInterviews || 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {analytics && analytics.totalInterviews > 0 
-                  ? Math.round((analytics.completedInterviews / analytics.totalInterviews) * 100)
-                  : 0}% completion rate
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4" />
-                Avg Processing Time
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {analytics ? formatTime(analytics.averageProcessingTime) : '0s'}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Per interview
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4" />
-                Unique Candidates
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
-                {analytics?.totalCandidates || 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Interviewed
-              </p>
+              <div className="text-3xl font-bold text-foreground mb-1">{analytics ? formatTime(analytics.averageProcessingTime) : '0s'}</div>
+              <p className="text-xs text-muted-foreground">Minutes per interview</p>
             </CardContent>
           </Card>
         </div>
-
-        {/* Charts and Analysis */}
-        <Tabs defaultValue="trends" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
-            <TabsTrigger value="positions">Positions</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="trends" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Interview Trends by Month
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analytics?.interviewsByMonth && analytics.interviewsByMonth.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.interviewsByMonth.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{item.month}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-accent rounded-full h-2">
-                            <div 
-                              className="bg-gradient-primary h-2 rounded-full"
-                              style={{ 
-                                width: `${(item.count / Math.max(...analytics.interviewsByMonth.map(i => i.count))) * 100}%` 
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-muted-foreground w-8 text-right">
-                            {item.count}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No data available for the selected time range
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="breakdown" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Status Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analytics?.interviewsByStatus && analytics.interviewsByStatus.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.interviewsByStatus.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${
-                            item.status === 'completed' ? 'bg-green-500' :
-                            item.status === 'processing' ? 'bg-yellow-500' :
-                            item.status === 'failed' ? 'bg-red-500' :
-                            'bg-gray-500'
-                          }`}></div>
-                          <span className="text-sm font-medium capitalize">{item.status}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-accent rounded-full h-2">
-                            <div 
-                              className="bg-gradient-primary h-2 rounded-full"
-                              style={{ 
-                                width: `${(item.count / (analytics?.totalInterviews || 1)) * 100}%` 
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-muted-foreground w-8 text-right">
-                            {item.count}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No status data available
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="positions" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Interview Positions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analytics?.positionBreakdown && analytics.positionBreakdown.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.positionBreakdown.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{item.position}</span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-32 bg-accent rounded-full h-2">
-                            <div 
-                              className="bg-gradient-primary h-2 rounded-full"
-                              style={{ 
-                                width: `${(item.count / Math.max(...analytics.positionBreakdown.map(i => i.count))) * 100}%` 
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-muted-foreground w-8 text-right">
-                            {item.count}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No position data available
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.recentActivity.map((item, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                        <div className="p-1.5 bg-primary/10 rounded-md">
-                          <Calendar className="h-3 w-3 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{item.activity}</p>
-                          {item.candidate && (
-                            <p className="text-xs text-muted-foreground">
-                              Candidate: {item.candidate}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(item.date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No recent activity
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div className="bg-muted rounded-xl p-8 shadow-inner mb-8">
+          <h3 className="text-lg font-semibold mb-4 text-foreground">Interviews by Month</h3>
+          {/* Insert chart component here */}
+          <div className="h-64 flex items-center justify-center text-muted-foreground">[Chart Placeholder]</div>
+        </div>
+        <div className="bg-muted rounded-xl p-8 shadow-inner">
+          <h3 className="text-lg font-semibold mb-4 text-foreground">Recent Activity</h3>
+          {/* Insert recent activity list here */}
+          <ul className="divide-y divide-border">
+            <li className="py-4 flex items-center gap-3">
+              <Activity className="h-5 w-5 text-primary" />
+              <span className="text-foreground">Candidate John Doe interview completed</span>
+              <span className="ml-auto text-xs text-muted-foreground">2 hours ago</span>
+            </li>
+            {/* More items... */}
+          </ul>
+        </div>
       </div>
     </div>
   );

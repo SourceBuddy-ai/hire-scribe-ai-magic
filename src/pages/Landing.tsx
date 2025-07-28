@@ -6,115 +6,55 @@ import { Brain, Upload, FileText, BarChart3, Shield, Zap } from 'lucide-react';
 
 export const Landing = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted font-sans">
       {/* Header */}
-      <header className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Brain className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold">RecruiterLab</span>
-        </div>
-        <div className="space-x-4">
-          <Link to="/auth">
-            <Button variant="ghost">Sign In</Button>
-          </Link>
-          <Link to="/auth">
-            <Button>Get Started</Button>
-          </Link>
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Brain className="h-7 w-7 text-primary" />
+            <span className="text-2xl font-bold text-foreground tracking-tight">RecruiterLab</span>
+          </div>
+          <div className="flex gap-2">
+            <Link to="/auth">
+              <Button variant="ghost" className="px-4 py-2">Sign In</Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="px-4 py-2">Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+      <section className="max-w-3xl mx-auto px-6 py-24 text-center flex flex-col items-center">
+        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent tracking-tight leading-tight">
           AI-Powered Interview Analysis
         </h1>
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Transform your hiring process with intelligent interview analysis. 
-          Upload transcripts, get instant insights, and make better hiring decisions.
+        <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto font-medium">
+          Transform your hiring process with intelligent interview analysis. Upload transcripts, get instant insights, and make better hiring decisions.
         </p>
         <Link to="/auth">
-          <Button size="lg" className="text-lg px-8 py-3">
-            Start Analyzing Interviews
-          </Button>
+          <Button size="lg" className="text-lg px-8 py-3 shadow-md hover:shadow-lg transition-shadow">Start Analyzing Interviews</Button>
         </Link>
       </section>
 
-      {/* Features */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Why RecruiterLab?</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card>
-            <CardHeader>
-              <Upload className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Easy Upload</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Simply upload your interview transcripts or audio files and let AI do the work.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Brain className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>AI Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Advanced AI extracts key insights, skills assessment, and candidate evaluation.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <FileText className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Structured Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Get professionally formatted reports with actionable insights and recommendations.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <BarChart3 className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Analytics Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Track your hiring patterns and improve your interview process over time.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Shield className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Secure & Private</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Enterprise-grade security ensures your interview data remains confidential.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Zap className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Lightning Fast</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Get comprehensive analysis results in seconds, not hours.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <Card className="shadow-card border border-border bg-white flex flex-col items-center p-8">
+          <Upload className="h-8 w-8 text-primary mb-4" />
+          <CardTitle className="text-lg font-semibold mb-2">Easy Uploads</CardTitle>
+          <CardContent className="text-center text-muted-foreground">Drag and drop your interview transcripts or audio files for instant analysis.</CardContent>
+        </Card>
+        <Card className="shadow-card border border-border bg-white flex flex-col items-center p-8">
+          <FileText className="h-8 w-8 text-blue-500 mb-4" />
+          <CardTitle className="text-lg font-semibold mb-2">Structured Insights</CardTitle>
+          <CardContent className="text-center text-muted-foreground">Get actionable, structured feedback and summaries from every interview.</CardContent>
+        </Card>
+        <Card className="shadow-card border border-border bg-white flex flex-col items-center p-8">
+          <BarChart3 className="h-8 w-8 text-green-500 mb-4" />
+          <CardTitle className="text-lg font-semibold mb-2">Analytics Dashboard</CardTitle>
+          <CardContent className="text-center text-muted-foreground">Track your hiring process with beautiful charts and analytics.</CardContent>
+        </Card>
       </section>
 
       {/* CTA Section */}

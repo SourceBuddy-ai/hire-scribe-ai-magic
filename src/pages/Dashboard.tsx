@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileUploadComponent } from "@/components/FileUploadComponent";
+import { StreamlinedUpload } from "@/components/StreamlinedUpload";
+import { SmartForm } from "@/components/SmartForm";
+import { ProgressTracker } from "@/components/ProgressTracker";
+import { QuickStartWizard } from "@/components/QuickStartWizard";
 import { InterviewsList } from "@/components/InterviewsList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from '@/integrations/supabase/client';
-import { LogOut, Users, Clock, Brain, Upload, FileAudio } from 'lucide-react';
+import { LogOut, Users, Clock, Brain, Upload, FileAudio, Sparkles } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -42,6 +45,8 @@ interface DashboardStats {
   recentInterviews: Interview[];
 }
 
+type UploadFlow = 'idle' | 'form' | 'upload' | 'processing' | 'complete';
+
 export const Dashboard = () => {
   const { user, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -51,16 +56,36 @@ export const Dashboard = () => {
     recentInterviews: []
   });
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [uploadFlow, setUploadFlow] = useState<UploadFlow>('idle');
+  const [currentInterviewId, setCurrentInterviewId] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       loadUserProfile(user.id);
       loadDashboardStats(user.id);
+      checkOnboardingStatus();
       setLoading(false);
     }
   }, [user]);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const { data: interviews } = await supabase
+        .from('interviews')
+        .select('status')
+        .eq('user_id', user?.id);
+
+      const hasCompletedInterviews = interviews?.some(i => i.status === 'completed');
+      
+      if (!hasCompletedInterviews && interviews?.length === 0) {
+        setShowOnboarding(true);
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   const loadUserProfile = async (userId: string) => {
     try {
@@ -110,81 +135,40 @@ export const Dashboard = () => {
     }
   };
 
-  const handleFileUpload = async (interviewId: string) => {
-    if (!user) return;
-    
-    setProcessing(true);
-    try {
-      // Get the interview data to extract transcript if it's a text file
-      const { data: interview, error: interviewError } = await supabase
-        .from('interviews')
-        .select('*')
-        .eq('id', interviewId)
-        .single();
+  const handleFormComplete = (formData: any) => {
+    setUploadFlow('upload');
+    toast({
+      title: "Form completed",
+      description: "Now let's upload your interview file.",
+    });
+  };
 
-      if (interviewError || !interview) {
-        throw new Error('Failed to fetch interview data');
-      }
+  const handleUploadComplete = (interviewId: string) => {
+    setCurrentInterviewId(interviewId);
+    setUploadFlow('processing');
+    toast({
+      title: "Upload successful",
+      description: "Starting AI analysis...",
+    });
+  };
 
-      let transcript = '';
+  const handleProcessingComplete = () => {
+    setUploadFlow('complete');
+    setShowOnboarding(false);
+    loadDashboardStats(user?.id || '');
+    toast({
+      title: "Analysis complete!",
+      description: "Your interview has been successfully analyzed.",
+    });
+  };
 
-      // If it's a text file, download and read the content
-      if (interview.file_name.endsWith('.txt')) {
-        const fileName = `${interview.id}-${interview.file_name}`;
-        const { data: fileData, error: downloadError } = await supabase.storage
-          .from('interview-audio')
-          .download(fileName);
+  const resetUploadFlow = () => {
+    setUploadFlow('idle');
+    setCurrentInterviewId(null);
+  };
 
-        if (downloadError) {
-          throw new Error('Failed to download file');
-        }
-
-        transcript = await fileData.text();
-      } else {
-        // For audio files, we'll need to implement transcription later
-        // For now, show a message that audio transcription is coming soon
-        toast({
-          title: "Audio files uploaded",
-          description: "Audio transcription will be available soon. For now, please use text files.",
-        });
-        await loadDashboardStats(user.id);
-        setProcessing(false);
-        return;
-      }
-
-      // Process the transcript
-      const { data, error } = await supabase.functions.invoke('process-interview', {
-        body: {
-          interviewId: interview.id,
-          transcript: transcript,
-          templateId: null // Default template for now
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to process interview');
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Processing failed');
-      }
-
-      toast({
-        title: "Analysis complete",
-        description: "Your interview has been successfully analyzed.",
-      });
-
-      await loadDashboardStats(user.id);
-    } catch (error) {
-      console.error('Processing error:', error);
-      toast({
-        title: "Processing failed",
-        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
-        variant: "destructive",
-      });
-    } finally {
-      setProcessing(false);
-    }
+  const startNewUpload = () => {
+    setUploadFlow('form');
   };
 
   if (loading) {
@@ -203,28 +187,29 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-background font-sans">
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Brain className="h-6 w-6 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg shadow-sm">
+              <Brain className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">RecruiterLab</h1>
-              <p className="text-sm text-muted-foreground">Interview Analysis Platform</p>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight leading-tight">RecruiterLab</h1>
+              <p className="text-sm text-muted-foreground font-medium">Interview Analysis Platform</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
+          <div className="flex items-center gap-4">
+            <span className="hidden md:inline text-sm text-muted-foreground font-medium">{userProfile?.full_name || 'User'}</span>
+            <Button variant="ghost" size="sm" onClick={signOut} className="flex items-center gap-2 px-3 py-2">
+              <LogOut className="h-5 w-5 text-primary" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-10 w-full">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -236,66 +221,119 @@ export const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <Card className="shadow-card hover:shadow-lg transition-shadow border border-border bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
-              <FileAudio className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base font-semibold text-primary flex items-center gap-2">
+                <FileAudio className="h-5 w-5 text-blue-500" />
+                Total Interviews
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalInterviews}</div>
-              <p className="text-xs text-muted-foreground">
-                All time recordings processed
-              </p>
+              <div className="text-3xl font-bold text-foreground mb-1">{stats.totalInterviews}</div>
+              <p className="text-xs text-muted-foreground">All time recordings processed</p>
             </CardContent>
           </Card>
-          
-          <Card>
+          <Card className="shadow-card hover:shadow-lg transition-shadow border border-border bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Processing</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base font-semibold text-warning flex items-center gap-2">
+                <Clock className="h-5 w-5 text-yellow-500" />
+                Processing
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.processingInterviews}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently being analyzed
-              </p>
+              <div className="text-3xl font-bold text-foreground mb-1">{stats.processingInterviews}</div>
+              <p className="text-xs text-muted-foreground">Currently being analyzed</p>
             </CardContent>
           </Card>
-          
-          <Card>
+          <Card className="shadow-card hover:shadow-lg transition-shadow border border-border bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscription</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base font-semibold text-success flex items-center gap-2">
+                <Users className="h-5 w-5 text-green-500" />
+                Subscription
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold capitalize">{userProfile?.subscription_type || 'Free'}</div>
-              <p className="text-xs text-muted-foreground">
-                Current plan
-              </p>
+              <div className="text-3xl font-bold text-foreground mb-1 capitalize">{userProfile?.subscription_type || 'Free'}</div>
+              <p className="text-xs text-muted-foreground">Current plan</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Upload Section */}
-          <div className="space-y-6">
-            <Card>
+          <div className="space-y-8">
+            <Card className="shadow-card border border-border bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Upload New Interview
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                  {uploadFlow === 'idle' ? 'Start New Analysis' : 
+                   uploadFlow === 'form' ? 'Interview Details' :
+                   uploadFlow === 'upload' ? 'Upload File' :
+                   uploadFlow === 'processing' ? 'Processing' :
+                   'Analysis Complete'}
                 </CardTitle>
-                <CardDescription>
-                  Upload your interview transcript or audio to generate structured insights
+                <CardDescription className="text-base text-muted-foreground mt-1">
+                  {uploadFlow === 'idle' && "Upload your interview transcript or audio to generate structured insights"}
+                  {uploadFlow === 'form' && "Fill in the interview details to get started"}
+                  {uploadFlow === 'upload' && "Upload your interview file for AI analysis"}
+                  {uploadFlow === 'processing' && "Our AI is analyzing your interview"}
+                  {uploadFlow === 'complete' && "Your interview has been successfully analyzed"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <FileUploadComponent 
-                  onUploadComplete={handleFileUpload} 
-                  isProcessing={processing}
-                />
+                {uploadFlow === 'idle' && (
+                  <div className="text-center py-8">
+                    <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Ready to analyze an interview?</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Upload your interview file and get AI-powered insights in minutes.
+                    </p>
+                    <Button onClick={startNewUpload} size="lg">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Start Analysis
+                    </Button>
+                  </div>
+                )}
+
+                {uploadFlow === 'form' && (
+                  <SmartForm onFormComplete={handleFormComplete} />
+                )}
+
+                {uploadFlow === 'upload' && (
+                  <StreamlinedUpload 
+                    onUploadComplete={handleUploadComplete}
+                    onProcessingComplete={handleProcessingComplete}
+                  />
+                )}
+
+                {uploadFlow === 'processing' && (
+                  <ProgressTracker 
+                    interviewId={currentInterviewId || undefined}
+                    onComplete={handleProcessingComplete}
+                  />
+                )}
+
+                {uploadFlow === 'complete' && (
+                  <div className="text-center py-8">
+                    <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                      <Sparkles className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Analysis Complete!</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Your interview has been successfully analyzed. View the results below.
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={resetUploadFlow} variant="outline">
+                        Analyze Another
+                      </Button>
+                      <Button onClick={() => window.location.href = `/interview/${currentInterviewId}`}>
+                        View Results
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -318,7 +356,15 @@ export const Dashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Onboarding Wizard */}
+      {showOnboarding && (
+        <QuickStartWizard 
+          onComplete={() => setShowOnboarding(false)}
+          onSkip={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 };
