@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ interface Template {
   template_content: any;
   is_public: boolean;
   created_at: string;
+  user_id: string;
 }
 
 export const TemplateManager = () => {
