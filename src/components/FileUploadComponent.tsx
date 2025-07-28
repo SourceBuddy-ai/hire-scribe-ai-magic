@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, FileText, FileAudio, X } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface FileUploadComponentProps {
   onUploadComplete: (interviewId: string) => void;
@@ -24,6 +25,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   const [positionTitle, setPositionTitle] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [consentObtained, setConsentObtained] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -96,10 +98,10 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
   };
 
   const uploadFile = async () => {
-    if (!selectedFile || !candidateName.trim() || !positionTitle.trim()) {
+    if (!selectedFile || !candidateName.trim() || !positionTitle.trim() || !consentObtained) {
       toast({
         title: 'Missing information',
-        description: 'Please fill in candidate name, position, and select a file.',
+        description: 'Please fill in all fields, select a file, and confirm consent.',
         variant: 'destructive',
       });
       return;
@@ -131,6 +133,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
           file_size: selectedFile.size,
           candidate_name: candidateName.trim(),
           position_title: positionTitle.trim(),
+          consent_obtained: consentObtained,
           status: 'uploading'
         })
         .select()
@@ -180,6 +183,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
       setCandidateName('');
       setPositionTitle('');
       setSelectedTemplate(null);
+      setConsentObtained(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -390,6 +394,27 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
             </div>
           )}
 
+          {/* Consent Checkbox */}
+          <div className="flex items-start space-x-3 p-4 border rounded-lg bg-muted/50">
+            <Checkbox
+              id="consent"
+              checked={consentObtained}
+              onCheckedChange={(checked) => setConsentObtained(checked === true)}
+              disabled={uploading || isProcessing}
+            />
+            <div className="grid gap-1.5 leading-none">
+              <Label
+                htmlFor="consent"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Consent for Recording Processing
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                I confirm that proper consent has been obtained from the candidate for recording and processing this interview for evaluation purposes.
+              </p>
+            </div>
+          </div>
+
           {/* Upload Progress */}
           {uploading && (
             <div>
@@ -404,7 +429,7 @@ export const FileUploadComponent: React.FC<FileUploadComponentProps> = ({
           {/* Upload Button */}
           <Button
             onClick={uploadFile}
-            disabled={!selectedFile || uploading || isProcessing || !candidateName.trim() || !positionTitle.trim()}
+            disabled={!selectedFile || uploading || isProcessing || !candidateName.trim() || !positionTitle.trim() || !consentObtained}
             className="w-full"
           >
             {uploading ? 'Uploading...' : 'Upload Interview'}
