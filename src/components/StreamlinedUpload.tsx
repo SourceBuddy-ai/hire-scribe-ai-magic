@@ -169,7 +169,7 @@ export const StreamlinedUpload = ({
       }
 
       console.log('Uploading file to storage...');
-      const fileName = `${interview.id}-${selectedFile.name}`;
+      const fileName = `${user.id}/${interview.id}-${selectedFile.name}`;
       console.log('Storage file name:', fileName);
 
       const { error: uploadError } = await supabase.storage
